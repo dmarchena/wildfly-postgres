@@ -1,4 +1,3 @@
-
 FROM openjdk:8u181-jdk-alpine
 #VOLUME /tmp
 
@@ -27,7 +26,6 @@ RUN echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/reposito
 
 ENV LANG en_US.utf8
 ENV POSTGRES_DB ${DB:-datastore}
-ENV POSTGRES_SCHEMA ${SCHEMA:-dataschema}
 ENV POSTGRES_USER $ADMIN_USER
 ENV POSTGRES_PASSWORD $ADMIN_PASS
 ENV PGDATA /var/lib/postgresql/data
