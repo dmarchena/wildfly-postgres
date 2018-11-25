@@ -24,8 +24,10 @@ RUN echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/reposito
   apk del curl && \
   rm -rf /var/cache/apk/*
 
+ARG DB
+
 ENV LANG en_US.utf8
-ENV POSTGRES_DB ${DB:-datastore}
+ENV POSTGRES_DB ${DB:-postgres}
 ENV POSTGRES_USER $ADMIN_USER
 ENV POSTGRES_PASSWORD $ADMIN_PASS
 ENV PGDATA /var/lib/postgresql/data
@@ -42,8 +44,10 @@ ADD https://jdbc.postgresql.org/download/postgresql-$POSTGRES_JDBC_VERSION.jar $
 RUN mkdir -p /var/run/postgresql && \
     chown -R postgres:postgres /var/run/postgresql && \
     chmod 2777 /var/run/postgresql && \
+    mkdir -p /entrypoint.initdb.d/ && \
     mkdir -p /entrypoint.initdb.d/
 COPY ./entrypoint.initdb.d/* /entrypoint.initdb.d/
+COPY ./entrypoint.after.d/* /entrypoint.after.d/
 
 WORKDIR /opt/setup/
 COPY ./setup/* ./
@@ -55,6 +59,7 @@ RUN /bin/sh -c '$JBOSS_HOME/bin/standalone.sh &' && \
     rm -rf ${JBOSS_HOME}/standalone/configuration/standalone_xml_history && \
     cat db-setup.sh > entrypoint.sh && echo >> entrypoint.sh && \
     cat start.sh >> entrypoint.sh && \
+    chmod +x /entrypoint.after.d/*.sh && \
     chmod +x ./*.sh
 
 ENTRYPOINT [ "/opt/setup/entrypoint.sh" ]
@@ -64,4 +69,4 @@ WORKDIR /opt/workspace/
 
 EXPOSE 8080 9990
 
-CMD ["deploy"]
+CMD ["ant"]

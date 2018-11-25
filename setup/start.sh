@@ -2,16 +2,6 @@
 
 set -e
 
-if [ ! -f "$PGDATA/PG_VERSION" ]; then
-    echo "Restoring $PGDATA ..."
-    tar -xf /zdata/backup.tar -C $PGDATA
-    #chown -R postgres:postgres "$PGDATA"
-    sync
-    echo "Done."
-else
-    echo "$PGDATA was already there, skipping restore."
-fi
-
 
 # echo "Launching command: $@ ..."
 # if [ "$1" = 'postgres' ]; then
@@ -19,11 +9,38 @@ fi
 # else
 #     exec "$@"
 # fi
-gosu postgres postgres &
+exec gosu postgres postgres &
 
-if [ -f "/opt/workspace/build.xml" ]; then
-    cd /opt/workspace
-    gosu root ant
-fi
+exec $JBOSS_HOME/bin/standalone.sh -b 0.0.0.0 -bmanagement=0.0.0.0 &
 
-exec $JBOSS_HOME/bin/standalone.sh -b 0.0.0.0 -bmanagement=0.0.0.0
+case $1 in
+    ant)
+        echo "Running ant..."
+        if [ -f "/opt/workspace/build.xml" ]; then
+            cd /opt/workspace
+            gosu root ant
+        fi
+        ;;
+    *)
+        exec "$@"
+esac
+
+cd /entrypoint.after.d/
+for f in *; do
+    case "$f" in
+        *.sh)  
+            if [ -x "$f" ]; then
+                echo "$0: running $f"
+                "./$f"
+            else
+                echo "$0: sourcing $f"
+                . "$f"
+            fi
+            ;;
+        *)
+            echo "$0: ignoring $f" 
+            ;;
+    esac
+    echo
+done
+
