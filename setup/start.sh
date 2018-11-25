@@ -21,9 +21,9 @@ fi
 # fi
 gosu postgres postgres &
 
-if [ -f "build.xml" ]; then
+if [ -f "/opt/workspace/build.xml" ]; then
+    cd /opt/workspace
     gosu root ant
 fi
-
 
 exec $JBOSS_HOME/bin/standalone.sh -b 0.0.0.0 -bmanagement=0.0.0.0
