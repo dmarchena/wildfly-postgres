@@ -41,7 +41,7 @@ gosu postgres pg_ctl -D "$PGDATA" \
     -w start
 echo
 
-cd /build.initdb.d/
+cd /entrypoint.initdb.d/
 for f in *; do
         case "$f" in
             *.sql) echo "$0: running $f"; psql --quiet --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --file="$f" &> /dev/null;;

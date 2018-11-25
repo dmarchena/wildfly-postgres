@@ -42,8 +42,8 @@ ADD https://jdbc.postgresql.org/download/postgresql-$POSTGRES_JDBC_VERSION.jar $
 RUN mkdir -p /var/run/postgresql && \
     chown -R postgres:postgres /var/run/postgresql && \
     chmod 2777 /var/run/postgresql && \
-    mkdir -p /build.initdb.d/
-COPY ./build.initdb.d/* /build.initdb.d/
+    mkdir -p /entrypoint.initdb.d/
+COPY ./entrypoint.initdb.d/* /entrypoint.initdb.d/
 
 WORKDIR /opt/setup/
 COPY ./setup/* ./
@@ -53,15 +53,15 @@ RUN /bin/sh -c '$JBOSS_HOME/bin/standalone.sh &' && \
     ${JBOSS_HOME}/bin/jboss-cli.sh --connect --file=datasource.cli && \
     ${JBOSS_HOME}/bin/jboss-cli.sh --connect --command=:shutdown && \
     rm -rf ${JBOSS_HOME}/standalone/configuration/standalone_xml_history && \
-    chmod +x ./*.sh && \
-    ./db-setup.sh
+    cat db-setup.sh > entrypoint.sh && echo >> entrypoint.sh && \
+    cat start.sh >> entrypoint.sh && \
+    chmod +x ./*.sh
 
-EXPOSE 8080 9990
-
-# This will boot WildFly in the standalone mode and bind to all interface
-#CMD ["postgres"]
-#CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
+ENTRYPOINT [ "/opt/setup/entrypoint.sh" ]
 
 RUN mkdir -p /opt/workspace/
 WORKDIR /opt/workspace/
-CMD ["/opt/setup/start.sh"]
+
+EXPOSE 8080 9990
+
+CMD ["deploy"]
